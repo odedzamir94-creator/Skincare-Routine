@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="שגרה">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf7f2">
+<title>שגרת הטיפוח שלי</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2a33;--muted:#8a8794;--line:#eee8df;
+--sun:#fff1cf;--sun-d:#a26b00;--moon:#e6e2fb;--moon-d:#4b3fa8;
+--face:#ffe3e0;--face-d:#b23a30;--back:#d9f0e4;--back-d:#1f7a4d;--ok:#1f7a4d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;padding:calc(16px + env(safe-area-inset-top)) 14px calc(60px + env(safe-area-inset-bottom));max-width:560px;margin-inline:auto}
+h1{font-size:22px;margin:4px 0 2px}.sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.days{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px}
+.day{flex:1 0 auto;min-width:44px;text-align:center;padding:8px 6px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:13px;cursor:pointer;font-weight:600}
+.day.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.day.today:not(.sel){border-color:var(--ink)}
+.tog{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px;font-size:13px}
+.tog b{display:block;font-size:14px}.tog span{color:var(--muted)}
+.sw{width:46px;height:26px;border-radius:13px;background:#d6d2cb;position:relative;flex:none;cursor:pointer;border:0}
+.sw::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--ok)}.sw.on::after{right:23px}
+.sec{border-radius:18px;padding:12px;margin-bottom:12px}
+.sec.am{background:var(--sun)}.sec.pm{background:var(--moon)}
+.sec h2{margin:0 0 8px;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+.sec.am h2{color:var(--sun-d)}.sec.pm h2{color:var(--moon-d)}
+.prog{font-size:12px;font-weight:600;opacity:.8}
+.grp{font-size:12px;font-weight:700;margin:10px 2px 6px;display:flex;gap:6px;align-items:center}
+.tag{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700}
+.tag.face{background:var(--face);color:var(--face-d)}.tag.back{background:var(--back);color:var(--back-d)}
+.step{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:14px;padding:11px 12px;margin-bottom:6px;cursor:pointer;border:1px solid transparent}
+.step .box{width:24px;height:24px;border-radius:8px;border:2px solid #cfc9bf;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
+.step.done{opacity:.55}.step.done .box{background:var(--ok);border-color:var(--ok)}
+.step.done .nm{text-decoration:line-through}
+.step .nm{font-weight:700;font-size:15px;direction:ltr;text-align:right;unicode-bidi:plaintext}
+.step .hd{font-size:12.5px;color:var(--muted)}
+.step.opt .nm::after{content:" (רשות)";font-weight:400;color:var(--muted);font-size:12px}
+.step.rest{background:transparent;border:1px dashed #cfc9bf;cursor:default;color:var(--muted);font-size:13px}
+.step.rest .box{display:none}
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+.reset{display:block;margin:10px auto 0;background:none;border:1px solid var(--line);border-radius:12px;padding:8px 14px;color:var(--muted);font-size:13px;cursor:pointer}
+
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tab{flex:1;text-align:center;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-weight:700;font-size:14px;cursor:pointer}.tab.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tot{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;text-align:center}.tot b{font-size:26px;display:block}.tot span{color:var(--muted);font-size:13px}
+.pr{background:var(--card);border-radius:14px;padding:11px 12px;margin-bottom:8px;border-right:5px solid #cfc9bf}
+.pr.ok{border-right-color:var(--ok)}.pr.soon{border-right-color:#e0a100}.pr.out{border-right-color:#d0463b}
+.pr .r1{display:flex;justify-content:space-between;gap:8px;align-items:center}.pr .nm{font-weight:700;font-size:14.5px;direction:ltr;unicode-bidi:plaintext}
+.pr .st{font-size:12.5px;color:var(--muted);margin-top:3px}.pr .mo{font-size:13px;font-weight:700;white-space:nowrap;direction:ltr}
+.pr button{margin-top:7px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12.5px;cursor:pointer;color:var(--ink)}
+.pr .badge{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:9px}
+.pr.soon .badge{background:#fff1cf;color:#a26b00}.pr.out .badge{background:#ffe3e0;color:#b23a30}.pr.ok .badge{background:#d9f0e4;color:#1f7a4d}
+</style>
+</head>
+<body>
+<h1>שגרת הטיפוח שלי</h1>
+<div class="sub" id="sub"></div>
+<div class="tabs"><div class="tab sel" data-t="today">היום</div><div class="tab" data-t="stock">מלאי והוצאות</div></div>
+<div id="viewToday"><div class="days" id="days"></div>
+
+<div class="tog">
+  <div><b id="togTitle"></b><span id="togSub"></span></div>
+  <button class="sw" id="sw" aria-label="מתג אישור רופא"></button>
+</div>
+
+<div id="app"></div>
+<button class="reset" id="reset">איפוס הסימונים של היום</button>
+</div><div id="viewStock" style="display:none"></div>
+<div class="note">הסימונים נשמרים בדפדפן הזה בלבד.</div>
+
+<script>
+const DAYS=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"]; // JS getDay(): 0=Sunday
+// night active for face by weekday index (0=Sun)
+const FACE_NIGHT={
+ 0:{n:"La Roche-Posay Cicaplast B5+",h:"קרם מרגיע",locked:false},
+ 1:{n:"CeraVe Resurfacing Retinol",h:"רטינול",locked:true},
+ 2:{n:"Madeca Cream Time Reverse",h:"קרם מרגיע",locked:false,mask:true},
+ 3:{n:"Caudalie Vinoperfect",h:"גליקולית",locked:true},
+ 4:{n:"CeraVe Resurfacing Retinol",h:"רטינול",locked:true},
+ 5:{n:"Madeca Cream Time Reverse",h:"קרם מרגיע",locked:false,mask:true},
+ 6:{n:"Caudalie Vinoperfect",h:"גליקולית",locked:true}
+};
+const BACK_NIGHT=d=>(d==1||d==4)?{n:"Arencia Eraser Shot Glycolic 10%",h:"גליקולית"}:{n:"COSRX Azelaic Acid 20",h:"אזלאית"};
+
+let sel=new Date().getDay();
+const today=new Date().getDay();
+const todayKey=()=>new Date().toISOString().slice(0,10);
+let STATE={cleared:false,done:{},opened:{}};
+let dbDoc=null;
+function loadLocal(){try{const v=JSON.parse(localStorage.getItem("state2"));if(v)STATE=Object.assign(STATE,v)}catch(e){}}
+function saveAll(){try{localStorage.setItem("state2",JSON.stringify(STATE))}catch(e){}
+  if(dbDoc){try{Promise.resolve(dbDoc.set(JSON.parse(JSON.stringify(STATE)))).catch(()=>{})}catch(e){}}}
+const getS=k=>k=="cleared"?STATE.cleared:(k.startsWith("done|")?STATE.done[k.slice(5)]:undefined);
+const setS=(k,v)=>{if(k=="cleared")STATE.cleared=v;else if(k.startsWith("done|"))STATE.done[k.slice(5)]=v;saveAll()};
+const cleared=()=>!!STATE.cleared;
+
+function stepsFor(d){
+  const c=cleared(), fn=FACE_NIGHT[d];
+  const am={face:[
+    {id:"am-rinse",n:"שטיפה במים",h:"בלי ניקוי"},
+    {id:"am-ha",n:"Cos De BAHA Hyaluronic Serum",h:"לחות"},
+    ...(c?[{id:"am-vc",n:"Dr.Althea Gentle Vitamin C",h:"ויטמין C"}]:[]),
+    {id:"am-moist",n:"Round Lab Dokdo 1025 Cream",h:"קרם לחות"},
+    {id:"am-spf",n:"Beauty of Joseon Relief Sun SPF50",h:"קרם הגנה"}
+  ]};
+  const faceP=[
+    {id:"pm-clean",n:"CeraVe Hydrating Cleanser",h:"ניקוי"},
+    {id:"pm-ha",n:"Cos De BAHA Hyaluronic Serum",h:"לחות"}
+  ];
+  if(fn.locked&&!c) faceP.push({id:"pm-rest",rest:true,n:"הלילה בלי פעיל בפנים",h:"עד שהרופא מאשר – שוטפים, מלחלחים וזהו"});
+  else faceP.push({id:"pm-act",n:fn.n,h:fn.h});
+  if(fn.mask) faceP.push({id:"pm-mask",n:"Biodance Mask",h:"פעם בשבוע בלבד",opt:true});
+  faceP.push({id:"pm-nz",n:"Numbuzin No.9",h:"קרם ערב",opt:true});
+  const b=BACK_NIGHT(d);
+  const backP=[
+    {id:"pm-bclean",n:"CeraVe SA Cleanser",h:"ניקוי גב וגוף"},
+    {id:"pm-bact",n:b.n,h:b.h}
+  ];
+  return{am,pm:{face:faceP,back:backP}};
+}
+
+function render(){
+  document.getElementById("sub").textContent="יום "+DAYS[sel]+(sel==today?" · היום":"");
+  document.getElementById("days").innerHTML=DAYS.map((n,i)=>`<div class="day ${i==sel?"sel":""} ${i==today?"today":""}" data-i="${i}">${n}</div>`).join("");
+  const c=cleared();
+  document.getElementById("togTitle").textContent=c?"הרופא אישר – כל הפעילים בפנים":"ממתין לאישור הרופא אחרי הלייזר";
+  document.getElementById("togSub").textContent=c?"ויטמין C, רטינול וגליקולית חזרו":"ויטמין C ופעילים בפנים מוסתרים";
+  document.getElementById("sw").className="sw"+(c?" on":"");
+  const s=stepsFor(sel), key=todayKey()+"|"+sel;
+  const done=getS("done|"+key)||{};
+  const row=x=>x.rest?`<div class="step rest"><div><div class="nm" style="direction:rtl">${x.n}</div><div class="hd">${x.h}</div></div></div>`
+    :`<div class="step ${done[x.id]?"done":""} ${x.opt?"opt":""}" data-id="${x.id}"><div class="box">${done[x.id]?"✓":""}</div><div><div class="nm">${x.n}</div><div class="hd">${x.h}</div></div></div>`;
+  const cnt=a=>{const t=a.filter(x=>!x.rest&&!x.opt);return t.filter(x=>done[x.id]).length+"/"+t.length};
+  const amAll=s.am.face, pmAll=[...s.pm.face,...s.pm.back];
+  document.getElementById("app").innerHTML=
+   `<div class="sec am"><h2><span>☀ בוקר</span><span class="prog">${cnt(amAll)}</span></h2>
+     <div class="grp"><span class="tag face">פנים</span></div>${s.am.face.map(row).join("")}</div>
+    <div class="sec pm"><h2><span>☾ ערב</span><span class="prog">${cnt(pmAll)}</span></h2>
+     <div class="grp"><span class="tag face">פנים</span></div>${s.pm.face.map(row).join("")}
+     <div class="grp"><span class="tag back">גב</span></div>${s.pm.back.map(row).join("")}</div>`;
+}
+
+const PRODUCTS=[
+ {id:"dokdo",n:"Round Lab Dokdo 1025 Cream",price:99.9,months:2.5,have:false},
+ {id:"vc",n:"Dr.Althea Gentle Vitamin C",price:50,months:2,have:false},
+ {id:"ha",n:"Cos De BAHA Hyaluronic (x2)",price:58,months:3,have:false},
+ {id:"ret",n:"CeraVe Resurfacing Retinol",price:119.9,months:5,have:false},
+ {id:"mad",n:"Madeca Cream Time Reverse",price:69.9,months:3,have:false},
+ {id:"azel",n:"COSRX Azelaic Acid 20",price:55,months:2,have:false},
+ {id:"aren",n:"Arencia Eraser Shot Glycolic 10%",price:42,months:6,have:false},
+ {id:"clean",n:"CeraVe Hydrating Cleanser",price:69.9,months:4,have:false},
+ {id:"sa",n:"CeraVe SA Cleanser",price:84.9,months:4,have:true},
+ {id:"boj",n:"Beauty of Joseon Relief Sun",price:45,months:1.5,have:true},
+ {id:"bio",n:"Biodance Mask (4-pack)",price:66,months:1,have:false},
+ {id:"supp",n:"B1 + B6 + Biotin supplement",price:55,months:1,have:false},
+ {id:"cau",n:"Caudalie Vinoperfect",price:200,months:5,have:true},
+ {id:"cica",n:"La Roche-Posay Cicaplast B5+",price:55,months:4,have:true}
+];
+const DAY=86400000;
+function fmt(d){return d.toLocaleDateString("he-IL",{day:"numeric",month:"numeric"})}
+function renderStock(){
+  const total=PRODUCTS.reduce((a,p)=>a+p.price/p.months,0);
+  const now=Date.now();
+  const rows=PRODUCTS.map(p=>{
+    const o=STATE.opened[p.id], mo=Math.round(p.price/p.months);
+    let cls="",st="עדיין לא נפתח",badge="";
+    if(o){const end=new Date(new Date(o).getTime()+p.months*30.4*DAY);const left=Math.round((end-now)/DAY);
+      st="נפתח "+fmt(new Date(o))+" · נגמר בערך ב־"+fmt(end);
+      if(left<=0){cls="out";badge="נגמר";}else if(left<=14){cls="soon";badge="נשארו כ־"+left+" ימים · להזמין";}else{cls="ok";badge="כ־"+left+" ימים";}}
+    return `<div class="pr ${cls}"><div class="r1"><div class="nm">${p.n}</div><div class="mo">≈₪${mo}/mo</div></div>
+      <div class="st">${st}${badge?` · <span class="badge">${badge}</span>`:""}</div>
+      <button data-open="${p.id}">${o?"פתחתי חדש היום":"פתחתי היום"}</button></div>`}).join("");
+  document.getElementById("viewStock").innerHTML=`<div class="tot"><b>≈ ₪${Math.round(total)}</b><span>הוצאה חודשית משוערת על הטיפוח</span></div>${rows}`;
+}
+function setTab(t){
+  document.querySelectorAll(".tab").forEach(e=>e.classList.toggle("sel",e.dataset.t==t));
+  document.getElementById("viewToday").style.display=t=="today"?"":"none";
+  document.getElementById("viewStock").style.display=t=="stock"?"":"none";
+  if(t=="stock")renderStock();
+}
+document.addEventListener("click",e=>{
+  const tb=e.target.closest(".tab"); if(tb){setTab(tb.dataset.t);return}
+  const ob=e.target.closest("[data-open]"); if(ob){STATE.opened[ob.dataset.open]=new Date().toISOString();saveAll();renderStock();return}
+  const d=e.target.closest(".day"); if(d){sel=+d.dataset.i;render();return}
+  const st=e.target.closest(".step[data-id]"); if(st){
+    const key="done|"+todayKey()+"|"+sel; const o=getS(key)||{}; o[st.dataset.id]=!o[st.dataset.id]; setS(key,o); render(); return}
+  if(e.target.id=="sw"){setS("cleared",!cleared());render();return}
+  if(e.target.id=="reset"){setS("done|"+todayKey()+"|"+sel,{});render()}
+});
+loadLocal();render();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+(async()=>{try{
+  const db=await claude.use("db"), user=await claude.use("user"); if(!db||!user)return;
+  const id=await user.id(); const doc=db.collection("data/users/"+id).doc("state");
+  const snap=await Promise.race([doc.get(),new Promise((_,r)=>setTimeout(r,10000))]);
+  const d=snap&&(typeof snap.data==="function"?snap.data():snap);
+  if(d&&(d.opened||d.done||"cleared" in d)){STATE=Object.assign({cleared:false,done:{},opened:{}},d);render()}
+  dbDoc=doc; if(!d||!Object.keys(d).length)saveAll();
+}catch(e){}})();
+</script>
+</body>
+</html>
