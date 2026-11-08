@@ -56,6 +56,13 @@ h1{font-size:22px;margin:4px 0 2px}.sub{color:var(--muted);font-size:13px;margin
 .pr button{margin-top:7px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12.5px;cursor:pointer;color:var(--ink)}
 .pr .badge{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:9px}
 .pr.soon .badge{background:#fff1cf;color:#a26b00}.pr.out .badge{background:#ffe3e0;color:#b23a30}.pr.ok .badge{background:#d9f0e4;color:#1f7a4d}
+.th{width:40px;height:40px;border-radius:12px;flex:none;object-fit:cover;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:22px}
+.step .th{width:34px;height:34px;font-size:19px;border-radius:10px}
+.pr .r1 .l{display:flex;gap:10px;align-items:center;min-width:0}
+.ed{margin-top:8px;background:var(--bg);border-radius:12px;padding:10px;display:grid;gap:7px}
+.ed label{font-size:12.5px;color:var(--muted);display:grid;gap:3px}
+.ed input[type=text],.ed input[type=number]{width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;direction:ltr}
+.ed .rw{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -91,7 +98,7 @@ const BACK_NIGHT=d=>(d==1||d==4)?{n:"Arencia Eraser Shot Glycolic 10%",h:"גלי
 let sel=new Date().getDay();
 const today=new Date().getDay();
 const todayKey=()=>new Date().toISOString().slice(0,10);
-let STATE={cleared:false,done:{},opened:{}};
+let STATE={cleared:false,done:{},opened:{},prods:{}};
 let dbDoc=null;
 function loadLocal(){try{const v=JSON.parse(localStorage.getItem("state2"));if(v)STATE=Object.assign(STATE,v)}catch(e){}}
 function saveAll(){try{localStorage.setItem("state2",JSON.stringify(STATE))}catch(e){}
@@ -135,7 +142,7 @@ function render(){
   const s=stepsFor(sel), key=todayKey()+"|"+sel;
   const done=getS("done|"+key)||{};
   const row=x=>x.rest?`<div class="step rest"><div><div class="nm" style="direction:rtl">${x.n}</div><div class="hd">${x.h}</div></div></div>`
-    :`<div class="step ${done[x.id]?"done":""} ${x.opt?"opt":""}" data-id="${x.id}"><div class="box">${done[x.id]?"✓":""}</div><div><div class="nm">${x.n}</div><div class="hd">${x.h}</div></div></div>`;
+    :`<div class="step ${done[x.id]?"done":""} ${x.opt?"opt":""}" data-id="${x.id}"><div class="box">${done[x.id]?"✓":""}</div>${thumb(pidOf(x),x.id=="am-rinse"?"💧":"🧴")}<div><div class="nm">${x.n}</div><div class="hd">${x.h}</div></div></div>`;
   const cnt=a=>{const t=a.filter(x=>!x.rest&&!x.opt);return t.filter(x=>done[x.id]).length+"/"+t.length};
   const amAll=s.am.face, pmAll=[...s.pm.face,...s.pm.back];
   document.getElementById("app").innerHTML=
@@ -162,30 +169,53 @@ const PRODUCTS=[
  {id:"cau",n:"Caudalie Vinoperfect",price:200,months:5,have:true},
  {id:"cica",n:"La Roche-Posay Cicaplast B5+",price:55,months:4,have:true}
 ];
+const EMO={dokdo:"🧴",vc:"🍊",ha:"💧",ret:"🌙",mad:"🌿",azel:"🧪",aren:"✨",clean:"🫧",sa:"🫧",boj:"☀️",bio:"🎭",supp:"💊",cau:"🍇",cica:"🩹"};
+function P(id){const b=PRODUCTS.find(x=>x.id==id)||{};return Object.assign({},b,(STATE.prods&&STATE.prods[id])||{})}
+function thumb(id,fb){const p=P(id);return p.photo?`<img class="th" src="${p.photo}" alt="">`:`<span class="th">${p.emoji||EMO[id]||fb||"🧴"}</span>`}
+const PIDX={"am-ha":"ha","am-vc":"vc","am-moist":"dokdo","am-spf":"boj","pm-clean":"clean","pm-ha":"ha","pm-mask":"bio","pm-bclean":"sa"};
+function pidOf(x){if(PIDX[x.id])return PIDX[x.id];const n=x.n;return n.includes("Retinol")?"ret":n.includes("Caudalie")?"cau":n.includes("Madeca")?"mad":n.includes("Cicaplast")?"cica":n.includes("Arencia")?"aren":n.includes("COSRX")?"azel":null}
+let editing=null;
 const DAY=86400000;
 function fmt(d){return d.toLocaleDateString("he-IL",{day:"numeric",month:"numeric"})}
 function renderStock(){
-  const total=PRODUCTS.reduce((a,p)=>a+p.price/p.months,0);
+  const L=PRODUCTS.map(p=>P(p.id));
+  const total=L.reduce((a,p)=>a+p.price/p.months,0);
   const now=Date.now();
-  const rows=PRODUCTS.map(p=>{
+  const rows=L.map(p=>{
     const o=STATE.opened[p.id], mo=Math.round(p.price/p.months);
     let cls="",st="עדיין לא נפתח",badge="";
     if(o){const end=new Date(new Date(o).getTime()+p.months*30.4*DAY);const left=Math.round((end-now)/DAY);
       st="נפתח "+fmt(new Date(o))+" · נגמר בערך ב־"+fmt(end);
       if(left<=0){cls="out";badge="נגמר";}else if(left<=14){cls="soon";badge="נשארו כ־"+left+" ימים · להזמין";}else{cls="ok";badge="כ־"+left+" ימים";}}
-    return `<div class="pr ${cls}"><div class="r1"><div class="nm">${p.n}</div><div class="mo">≈₪${mo}/mo</div></div>
+    const ed=editing==p.id?`<div class="ed">
+      <label>שם<input type="text" data-f="n" data-id="${p.id}" value="${(p.n||"").replace(/"/g,"&quot;")}"></label>
+      <label>מחיר (₪)<input type="number" inputmode="decimal" data-f="price" data-id="${p.id}" value="${p.price}"></label>
+      <label>כמה חודשים הוא מחזיק<input type="number" inputmode="decimal" step="0.5" data-f="months" data-id="${p.id}" value="${p.months}"></label>
+      <label>אימוג׳י<input type="text" data-f="emoji" data-id="${p.id}" value="${p.emoji||EMO[p.id]||""}"></label>
+      <div class="rw"><button data-photo="${p.id}">📷 תמונה</button>${p.photo?`<button data-nophoto="${p.id}">הסר תמונה</button>`:""}<button data-done="1">סיום</button></div>
+      <input type="file" accept="image/*" id="file-${p.id}" style="display:none" data-fid="${p.id}"></div>`:"";
+    return `<div class="pr ${cls}"><div class="r1"><div class="l">${thumb(p.id)}<div class="nm">${p.n}</div></div><div class="mo">≈₪${mo}/mo</div></div>
       <div class="st">${st}${badge?` · <span class="badge">${badge}</span>`:""}</div>
-      <button data-open="${p.id}">${o?"פתחתי חדש היום":"פתחתי היום"}</button></div>`}).join("");
+      <button data-open="${p.id}">${o?"פתחתי חדש היום":"פתחתי היום"}</button> <button data-edit="${p.id}">עריכה</button>${ed}</div>`}).join("");
   document.getElementById("viewStock").innerHTML=`<div class="tot"><b>≈ ₪${Math.round(total)}</b><span>הוצאה חודשית משוערת על הטיפוח</span></div>${rows}`;
 }
+function setP(id,f,v){STATE.prods=STATE.prods||{};STATE.prods[id]=STATE.prods[id]||{};STATE.prods[id][f]=v;saveAll()}
+function resizeTo(file,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const m=160,k=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);cb(c.toDataURL("image/jpeg",0.75))};im.src=r.result};r.readAsDataURL(file)}
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset&&t.dataset.f){const f=t.dataset.f;let v=t.value;if(f=="price"||f=="months"){v=parseFloat(v);if(!(v>0))return}setP(t.dataset.id,f,v);if(f!="n"&&f!="emoji"){renderStock();}}
+  if(t.dataset&&t.dataset.fid&&t.files&&t.files[0]){resizeTo(t.files[0],u=>{setP(t.dataset.fid,"photo",u);renderStock()})}});
 function setTab(t){
   document.querySelectorAll(".tab").forEach(e=>e.classList.toggle("sel",e.dataset.t==t));
   document.getElementById("viewToday").style.display=t=="today"?"":"none";
   document.getElementById("viewStock").style.display=t=="stock"?"":"none";
-  if(t=="stock")renderStock();
+  if(t=="stock")renderStock();else render();
 }
 document.addEventListener("click",e=>{
   const tb=e.target.closest(".tab"); if(tb){setTab(tb.dataset.t);return}
+  const ed=e.target.closest("[data-edit]"); if(ed){editing=editing==ed.dataset.edit?null:ed.dataset.edit;renderStock();return}
+  const pb=e.target.closest("[data-photo]"); if(pb){const f=document.getElementById("file-"+pb.dataset.photo);if(f)f.click();return}
+  const np=e.target.closest("[data-nophoto]"); if(np){setP(np.dataset.nophoto,"photo",null);renderStock();return}
+  if(e.target.closest("[data-done]")){editing=null;renderStock();render();return}
   const ob=e.target.closest("[data-open]"); if(ob){STATE.opened[ob.dataset.open]=new Date().toISOString();saveAll();renderStock();return}
   const d=e.target.closest(".day"); if(d){sel=+d.dataset.i;render();return}
   const st=e.target.closest(".step[data-id]"); if(st){
@@ -200,7 +230,7 @@ if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch
   const id=await user.id(); const doc=db.collection("data/users/"+id).doc("state");
   const snap=await Promise.race([doc.get(),new Promise((_,r)=>setTimeout(r,10000))]);
   const d=snap&&(typeof snap.data==="function"?snap.data():snap);
-  if(d&&(d.opened||d.done||"cleared" in d)){STATE=Object.assign({cleared:false,done:{},opened:{}},d);render()}
+  if(d&&(d.opened||d.done||"cleared" in d)){STATE=Object.assign({cleared:false,done:{},opened:{},prods:{}},d);render()}
   dbDoc=doc; if(!d||!Object.keys(d).length)saveAll();
 }catch(e){}})();
 </script>
